@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @NoArgsConstructor
@@ -17,7 +18,10 @@ import java.time.LocalDateTime;
 public class TopicMeeting {
 
     @Id
+    private UUID topicId;
+
     @OneToOne
+    @MapsId
     @JoinColumn(name = "topic_id")
     private Topic topic;
 

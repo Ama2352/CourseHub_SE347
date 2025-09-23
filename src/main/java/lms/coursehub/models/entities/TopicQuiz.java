@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @NoArgsConstructor
@@ -19,7 +20,10 @@ import java.util.List;
 public class TopicQuiz {
 
     @Id
+    private UUID topicId;
+
     @OneToOne
+    @MapsId
     @JoinColumn(name = "topic_id")
     private Topic topic;
 
@@ -33,7 +37,7 @@ public class TopicQuiz {
     private String gradingMethod;
     private String attemptAllowed;
 
-    @ManyToMany
+    @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @JoinTable(name = "topic_quiz_questions", joinColumns = @JoinColumn(name = "topic_quiz_id"), inverseJoinColumns = @JoinColumn(name = "question_id"))
     private List<Question> questions;
 

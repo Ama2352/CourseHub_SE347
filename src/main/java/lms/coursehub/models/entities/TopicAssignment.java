@@ -8,6 +8,7 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @NoArgsConstructor
@@ -18,7 +19,10 @@ import java.util.List;
 public class TopicAssignment {
 
     @Id
+    private UUID topicId;
+
     @OneToOne
+    @MapsId
     @JoinColumn(name = "topic_id")
     private Topic topic;
 
@@ -28,10 +32,11 @@ public class TopicAssignment {
     private String remindToGrade;
     private int maximumFile;
 
-    @ManyToMany
+    @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @JoinTable(name = "topic_assignment_files", joinColumns = @JoinColumn(name = "topic_assignment_id"), inverseJoinColumns = @JoinColumn(name = "file_id"))
     private List<CloudinaryFile> assignmentFiles;
 
     @OneToMany(mappedBy = "assignment", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AssignmentResponse> assignmentResponses = new ArrayList<>();
+
 }

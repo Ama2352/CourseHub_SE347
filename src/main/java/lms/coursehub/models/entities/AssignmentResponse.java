@@ -41,7 +41,7 @@ public class AssignmentResponse {
     @JoinColumn(name = "grader")
     private User grader;
 
-    @ManyToMany
+    @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @JoinTable(name = "assignment_response_files", joinColumns = @JoinColumn(name = "assignment_response_id"), inverseJoinColumns = @JoinColumn(name = "file_id"))
     private List<CloudinaryFile> assignmentFiles;
 }
