@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.time.LocalDateTime;
@@ -15,28 +14,26 @@ import java.util.UUID;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Setter
 @Getter
-@Table(name = "refresh_tokens")
-public class RefreshToken {
+@Setter
+@Table(
+    name = "enrollment_details",
+    uniqueConstraints = @UniqueConstraint(columnNames = {"student_id", "course_id"})
+)
+public class EnrollmentDetail {
 
     @Id
     @UuidGenerator
-    private UUID tokenId;
-
-    @Column(nullable = false)
-    private String token;
+    private UUID enrollmentId;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @JoinColumn(name = "student_id")
+    private User student;
 
-    private LocalDateTime revokedAt;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "course_id")
+    private Course course;
 
     @CreationTimestamp
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
+    private LocalDateTime joinDate;
 }
