@@ -3,10 +3,8 @@ services:
     image: postgres:17
     container_name: coursehub-db
     restart: always
-    environment:
-      POSTGRES_DB: coursehub
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    env_file:
+      - .env
     ports:
       - "5431:5432"
     volumes:
@@ -15,13 +13,8 @@ services:
   coursehub:
     build: .
     container_name: coursehub-app
-    environment:
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
-      CLOUD_API_KEY: ${CLOUD_API_KEY}
-      CLOUD_API_SECRET: ${CLOUD_API_SECRET}
-      CLOUD_NAME: ${CLOUD_NAME}
-      JWT_SECRET: ${JWT_SECRET}
+    env_file:
+      - .env
     ports:
       - "8080:8080"
     depends_on:
