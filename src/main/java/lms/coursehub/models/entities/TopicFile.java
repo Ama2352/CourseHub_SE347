@@ -17,15 +17,13 @@ import lombok.Setter;
 public class TopicFile {
 
     @Id
-    private UUID topicId;
+    private UUID id;
 
     @OneToOne
     @MapsId
-    @JoinColumn(name = "topic_id")
     private Topic topic;
 
     @OneToOne
-    @JoinColumn(name = "file_id")
     private CloudinaryFile file;
 
     private String description;

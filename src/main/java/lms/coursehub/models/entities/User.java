@@ -23,7 +23,7 @@ public class User {
 
     @Id
     @UuidGenerator
-    private UUID userId;
+    private UUID id;
 
     @Column(unique = true, nullable = false)
     private String email;

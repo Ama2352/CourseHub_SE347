@@ -19,11 +19,10 @@ import java.util.UUID;
 public class TopicAssignment {
 
     @Id
-    private UUID topicId;
+    private UUID id;
 
     @OneToOne
     @MapsId
-    @JoinColumn(name = "topic_id")
     private Topic topic;
 
     private String description;
@@ -34,9 +33,9 @@ public class TopicAssignment {
 
     @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @JoinTable(name = "topic_assignment_files", joinColumns = @JoinColumn(name = "topic_assignment_id"), inverseJoinColumns = @JoinColumn(name = "file_id"))
-    private List<CloudinaryFile> assignmentFiles;
+    private List<CloudinaryFile> assignmentFiles = new ArrayList<>();
 
-    @OneToMany(mappedBy = "assignment", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "topicAssignment", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AssignmentResponse> assignmentResponses = new ArrayList<>();
 
 }

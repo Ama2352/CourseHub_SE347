@@ -17,11 +17,10 @@ import lombok.Setter;
 public class TopicLink {
 
     @Id
-    private UUID topicId;
+    private UUID id;
 
     @OneToOne
     @MapsId
-    @JoinColumn(name = "topic_id")
     private Topic topic;
 
     private String description;

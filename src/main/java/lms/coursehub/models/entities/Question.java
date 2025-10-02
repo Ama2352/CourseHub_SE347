@@ -25,7 +25,7 @@ public class Question {
 
     @Id
     @UuidGenerator
-    private UUID questionId;
+    private UUID id;
 
     private String questionName;
     private String questionText;
@@ -35,7 +35,7 @@ public class Question {
     private long usage;
     private String feedbackOfTrue;
     private String feedbackOfFalse;
-    private boolean correctAnswer;  // for true false question
+    private boolean correctAnswer; // for true false question
     private boolean multiple; // for multiple choices questions
 
     @CreationTimestamp
@@ -47,17 +47,14 @@ public class Question {
     private LocalDateTime deletedAt;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "creator_id")
     private User creator;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "modifier_id")
     private User modifier;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "course_id")
     private Course course;
 
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<QuestionChoice> choices = new ArrayList<>();
+    private List<QuestionChoice> questionChoices = new ArrayList<>();
 }

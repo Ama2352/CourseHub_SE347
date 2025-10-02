@@ -18,11 +18,10 @@ import java.util.UUID;
 public class TopicMeeting {
 
     @Id
-    private UUID topicId;
+    private UUID id;
 
     @OneToOne
     @MapsId
-    @JoinColumn(name = "topic_id")
     private Topic topic;
 
     private String description;

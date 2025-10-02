@@ -21,14 +21,13 @@ public class Topic {
 
     @Id
     @UuidGenerator
-    private UUID topicId;
+    private UUID id;
 
     private String title;
     private String type;
     private int studentCount;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "section_id")
     private Section section;
 
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)

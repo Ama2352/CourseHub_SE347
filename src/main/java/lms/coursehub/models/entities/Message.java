@@ -21,10 +21,9 @@ public class Message {
 
     @Id
     @UuidGenerator
-    private UUID messageId;
+    private UUID id;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "sender_id")
     private User sender;
 
     private String content;
@@ -33,6 +32,5 @@ public class Message {
     private LocalDateTime sentAt;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "conversation_id")
     private Conversation conversation;
 }

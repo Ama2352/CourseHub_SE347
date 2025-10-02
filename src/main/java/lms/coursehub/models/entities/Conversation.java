@@ -21,14 +21,12 @@ public class Conversation {
 
     @Id
     @UuidGenerator
-    private UUID conversationId;
+    private UUID id;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "user1_id")
     private User user1;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "user2_id")
     private User user2;
 
     private LocalDateTime lastMessageAt;

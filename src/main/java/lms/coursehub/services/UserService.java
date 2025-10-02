@@ -74,9 +74,4 @@ public class UserService {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return findByEmail(email);
     }
-
-    public UserProfileResponse getProfile() {
-        User currentUser = getCurrentUser();
-        return userMapper.toDTO(currentUser);
-    }
 }

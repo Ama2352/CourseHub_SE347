@@ -21,7 +21,7 @@ public class CloudinaryFile {
 
     @Id
     @UuidGenerator
-    private UUID fileId;
+    private UUID id;
 
     private String name;
     private String displayUrl;

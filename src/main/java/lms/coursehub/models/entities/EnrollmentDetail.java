@@ -16,22 +16,17 @@ import java.util.UUID;
 @AllArgsConstructor
 @Getter
 @Setter
-@Table(
-    name = "enrollment_details",
-    uniqueConstraints = @UniqueConstraint(columnNames = {"student_id", "course_id"})
-)
+@Table(name = "enrollment_details", uniqueConstraints = @UniqueConstraint(columnNames = { "student_id", "course_id" }))
 public class EnrollmentDetail {
 
     @Id
     @UuidGenerator
-    private UUID enrollmentId;
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "student_id")
     private User student;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "course_id")
     private Course course;
 
     @CreationTimestamp

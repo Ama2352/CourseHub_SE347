@@ -20,11 +20,10 @@ import java.util.UUID;
 public class TopicQuiz {
 
     @Id
-    private UUID topicId;
+    private UUID id;
 
     @OneToOne
     @MapsId
-    @JoinColumn(name = "topic_id")
     private Topic topic;
 
     private int studentCount;
@@ -41,7 +40,7 @@ public class TopicQuiz {
     @JoinTable(name = "topic_quiz_questions", joinColumns = @JoinColumn(name = "topic_quiz_id"), inverseJoinColumns = @JoinColumn(name = "question_id"))
     private List<Question> questions;
 
-    @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "topicQuiz", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<QuizResponse> quizResponses = new ArrayList<>();
 
 }

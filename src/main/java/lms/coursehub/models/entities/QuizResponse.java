@@ -22,21 +22,20 @@ public class QuizResponse {
 
     @Id
     @UuidGenerator
-    private UUID responseId;
+    private UUID id;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "student_id")
     private User student;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "topic_quiz_id")
-    private TopicQuiz quiz;
+    private TopicQuiz topicQuiz;
 
     private String status;
 
     private LocalDateTime startedAt;
     private LocalDateTime completedAt;
 
-    @OneToMany(mappedBy = "response", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<QuizResponseAnswer> answers = new ArrayList<>();
+    @OneToMany(mappedBy = "quizResponse", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<QuizResponseAnswer> quizResponseAnswers = new ArrayList<>();
 }

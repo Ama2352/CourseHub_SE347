@@ -22,13 +22,12 @@ public class RefreshToken {
 
     @Id
     @UuidGenerator
-    private UUID tokenId;
+    private UUID id;
 
     @Column(nullable = false)
     private String token;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id")
     private User user;
 
     private LocalDateTime revokedAt;

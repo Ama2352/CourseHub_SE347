@@ -20,11 +20,10 @@ public class QuizResponseAnswer {
 
     @Id
     @UuidGenerator
-    private UUID answerId;
+    private UUID id;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "quiz_response_id")
-    private QuizResponse response;
+    private QuizResponse quizResponse;
 
     private String question;
     private String answer;

@@ -21,7 +21,7 @@ public class Comment {
 
     @Id
     @UuidGenerator
-    private UUID commentId;
+    private UUID id;
 
     @Column(nullable = false)
     private String text;
@@ -31,10 +31,8 @@ public class Comment {
     private LocalDateTime createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id")
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "topic_id")
     private Topic topic;
 }

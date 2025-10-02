@@ -18,8 +18,5 @@ public class UserController {
 
     private final UserService userService;
 
-    @GetMapping("/profile")
-    public ResponseEntity<?> getProfile() {
-        return ResponseEntity.ok(userService.getProfile());
-    }
+
 }

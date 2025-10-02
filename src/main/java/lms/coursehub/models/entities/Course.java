@@ -19,7 +19,7 @@ import java.util.List;
 public class Course {
 
     @Id
-    private String courseId;
+    private String id;
 
     @Column(unique = true)
     private String title;
@@ -34,7 +34,6 @@ public class Course {
     private boolean isPublished;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "creator_id")
     private User creator;
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)

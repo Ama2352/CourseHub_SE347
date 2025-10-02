@@ -9,6 +9,7 @@ import org.hibernate.annotations.UuidGenerator;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,15 +23,14 @@ public class AssignmentResponse {
 
     @Id
     @UuidGenerator
-    private UUID responseId;
+    private UUID id;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "student_id")
     private User student;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "topic_id")
-    private TopicAssignment assignment;
+    @JoinColumn(name = "topic_assignment_id")
+    private TopicAssignment topicAssignment;
 
     private LocalDateTime submittedAt;
     private String note;
@@ -38,10 +38,9 @@ public class AssignmentResponse {
     private LocalDateTime gradedAt;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "grader")
     private User grader;
 
     @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @JoinTable(name = "assignment_response_files", joinColumns = @JoinColumn(name = "assignment_response_id"), inverseJoinColumns = @JoinColumn(name = "file_id"))
-    private List<CloudinaryFile> assignmentFiles;
+    private List<CloudinaryFile> assignmentFiles = new ArrayList<>();
 }

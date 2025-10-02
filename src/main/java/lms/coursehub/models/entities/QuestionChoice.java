@@ -20,13 +20,12 @@ public class QuestionChoice {
 
     @Id
     @UuidGenerator
-    private UUID choiceId;
+    private UUID id;
 
     private String text;
     private BigDecimal gradePercent;
     private String feedback;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "question_id")
     private Question question;
 }
