@@ -38,7 +38,7 @@ public class TopicQuiz {
 
     @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @JoinTable(name = "topic_quiz_questions", joinColumns = @JoinColumn(name = "topic_quiz_id"), inverseJoinColumns = @JoinColumn(name = "question_id"))
-    private List<Question> questions;
+    private List<Question> questions = new ArrayList<>();
 
     @OneToMany(mappedBy = "topicQuiz", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<QuizResponse> quizResponses = new ArrayList<>();
