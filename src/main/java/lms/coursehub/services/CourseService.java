@@ -49,12 +49,18 @@ public class CourseService {
         Course course = courseRepo.findById(id)
                 .orElseThrow(() -> new CustomException("Course not found", HttpStatus.NOT_FOUND));
 
-        course.setTitle(request.getTitle());
-        course.setDescription(request.getDescription());
-        course.setImageUrl(request.getImageUrl());
-        course.setCategory(request.getCategory());
-        course.setLevel(request.getLevel());
-        course.setPublished(request.isPublished());
+        if (request.getTitle() != null)
+            course.setTitle(request.getTitle());
+        if (request.getDescription() != null)
+            course.setDescription(request.getDescription());
+        if (request.getImageUrl() != null)
+            course.setImageUrl(request.getImageUrl());
+        if (request.getCategory() != null)
+            course.setCategory(request.getCategory());
+        if (request.getLevel() != null)
+            course.setLevel(request.getLevel());
+        if (request.getIsPublished() != null)
+            course.setPublished(request.getIsPublished());
 
         courseRepo.save(course);
     }

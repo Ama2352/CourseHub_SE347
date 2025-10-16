@@ -12,6 +12,13 @@ public interface TopicRepo extends JpaRepository<Topic, UUID> {
 
     List<Topic> findBySectionIdOrderByTitle(UUID sectionId);
 
+    @Query("SELECT t FROM Topic t JOIN t.section s ORDER BY s.position ASC, t.title ASC")
+    List<Topic> findAllOrderBySectionPositionAscTitle();
+
+    List<Topic> findByTypeOrderByTitle(String type);
+
+    List<Topic> findByTypeInOrderByTitle(List<String> types);
+
     @Query("SELECT t FROM Topic t JOIN t.section s WHERE s.course.id = :courseId ORDER BY s.position ASC, t.title ASC")
     List<Topic> findBySectionCourseIdOrderBySectionPositionAscTitle(@Param("courseId") String courseId);
 

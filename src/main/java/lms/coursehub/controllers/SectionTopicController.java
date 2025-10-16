@@ -12,7 +12,7 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/course/{courseId}/section/{sectionId}/topics")
+@RequestMapping("/topic/section/{sectionId}")
 @Tag(name = "Section Topic Management")
 public class SectionTopicController {
 
@@ -20,10 +20,9 @@ public class SectionTopicController {
 
     @GetMapping
     public ResponseEntity<List<TopicResponseDto>> getAllTopicsForSection(
-            @PathVariable String courseId,
             @PathVariable UUID sectionId) {
 
-        List<TopicResponseDto> responses = topicService.getAllTopicsForSection(courseId, sectionId);
+        List<TopicResponseDto> responses = topicService.getAllTopicsForSection(sectionId);
         return ResponseEntity.ok(responses);
     }
 }

@@ -4,6 +4,7 @@ import lms.coursehub.helpers.exceptions.CustomException;
 import lms.coursehub.helpers.mapstructs.SectionMapper;
 import lms.coursehub.models.dtos.section.CreateSectionRequest;
 import lms.coursehub.models.dtos.section.SectionResponseDto;
+import lms.coursehub.models.dtos.section.UpdateSectionRequest;
 import lms.coursehub.models.entities.Course;
 import lms.coursehub.models.entities.Section;
 import lms.coursehub.repositories.SectionRepo;
@@ -26,7 +27,8 @@ public class SectionService {
     @Transactional
     public SectionResponseDto createSection(CreateSectionRequest request) {
         Section section = sectionMapper.toEntity(request);
-        // Note: You'll need to set the course in the request or handle it here
+        Course course = courseService.findCourseById(request.getCourseId());
+        section.setCourse(course);
         section = sectionRepo.save(section);
         return sectionMapper.toResponseDto(section);
     }
@@ -41,14 +43,17 @@ public class SectionService {
 
     // PUT /section/{id} - Update section
     @Transactional
-    public SectionResponseDto updateSection(UUID sectionId, CreateSectionRequest request) {
+    public SectionResponseDto updateSection(UUID sectionId, UpdateSectionRequest request) {
         Section existingSection = sectionRepo.findById(sectionId)
                 .orElseThrow(() -> new CustomException("Section not found", HttpStatus.NOT_FOUND));
 
         // Update fields
-        existingSection.setPosition(request.getPosition());
-        existingSection.setTitle(request.getTitle());
-        existingSection.setDescription(request.getDescription());
+        if (request.getPosition() != null)
+            existingSection.setPosition(request.getPosition());
+        if (request.getTitle() != null)
+            existingSection.setTitle(request.getTitle());
+        if (request.getDescription() != null)
+            existingSection.setDescription(request.getDescription());
 
         existingSection = sectionRepo.save(existingSection);
         return sectionMapper.toResponseDto(existingSection);

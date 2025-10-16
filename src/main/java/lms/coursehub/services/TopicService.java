@@ -14,6 +14,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -34,26 +36,27 @@ public class TopicService {
     private final SectionRepo sectionRepo;
     private final UserService userService;
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
     private final ObjectMapper objectMapper = new ObjectMapper()
             .registerModule(new ParameterNamesModule())
             .registerModule(new Jdk8Module())
             .registerModule(new JavaTimeModule());
 
     @Transactional
-    public TopicResponseDto createTopic(String courseId, CreateTopicRequest request) {
+    public TopicResponseDto createTopic(CreateTopicRequest request) {
         try {
             // Validate that section belongs to the course
             Section section = sectionRepo.findById(request.getSectionId())
                     .orElseThrow(() -> new CustomException("Section not found", HttpStatus.NOT_FOUND));
 
-            if (!section.getCourse().getId().equals(courseId)) {
-                throw new CustomException("Section does not belong to the specified course", HttpStatus.BAD_REQUEST);
-            }
-
             // Create base topic
             Topic topic = topicMapper.toEntity(request);
             topic.setSection(section);
+
             topic = topicRepo.save(topic);
+            entityManager.flush(); // Ensure Topic is persisted before related entities
 
             // Create type-specific data and get parsed response
             Object parsedData = createTopicSpecificData(topic, request.getType(), request.getData());
@@ -99,7 +102,7 @@ public class TopicService {
         QuizDataDto quizData = objectMapper.readValue(jsonData, QuizDataDto.class);
 
         TopicQuiz topicQuiz = new TopicQuiz();
-        topicQuiz.setId(topic.getId());
+        // Don't set ID manually when using @MapsId - let JPA handle it
         topicQuiz.setTopic(topic);
         topicQuiz.setDescription(quizData.getDescription());
         topicQuiz.setOpen(quizData.getOpen());
@@ -121,7 +124,7 @@ public class TopicService {
         AssignmentDataDto assignmentData = objectMapper.readValue(jsonData, AssignmentDataDto.class);
 
         TopicAssignment topicAssignment = new TopicAssignment();
-        topicAssignment.setId(topic.getId());
+        // Don't set ID manually when using @MapsId - let JPA handle it
         topicAssignment.setTopic(topic);
         topicAssignment.setDescription(assignmentData.getDescription());
         topicAssignment.setOpen(assignmentData.getOpen());
@@ -143,7 +146,7 @@ public class TopicService {
         FileDataDto fileData = objectMapper.readValue(jsonData, FileDataDto.class);
 
         TopicFile topicFile = new TopicFile();
-        topicFile.setId(topic.getId());
+        // Don't set ID manually when using @MapsId - let JPA handle it
         topicFile.setTopic(topic);
         topicFile.setDescription(fileData.getDescription());
 
@@ -160,7 +163,7 @@ public class TopicService {
         LinkDataDto linkData = objectMapper.readValue(jsonData, LinkDataDto.class);
 
         TopicLink topicLink = new TopicLink();
-        topicLink.setId(topic.getId());
+        // Don't set ID manually when using @MapsId - let JPA handle it
         topicLink.setTopic(topic);
         topicLink.setDescription(linkData.getDescription());
         topicLink.setUrl(linkData.getUrl());
@@ -173,7 +176,7 @@ public class TopicService {
         PageDataDto pageData = objectMapper.readValue(jsonData, PageDataDto.class);
 
         TopicPage topicPage = new TopicPage();
-        topicPage.setId(topic.getId());
+        // Don't set ID manually when using @MapsId - let JPA handle it
         topicPage.setTopic(topic);
         topicPage.setDescription(pageData.getDescription());
         topicPage.setContent(pageData.getContent());
@@ -186,7 +189,7 @@ public class TopicService {
         MeetingDataDto meetingData = objectMapper.readValue(jsonData, MeetingDataDto.class);
 
         TopicMeeting topicMeeting = new TopicMeeting();
-        topicMeeting.setId(topic.getId());
+        // Don't set ID manually when using @MapsId - let JPA handle it
         topicMeeting.setTopic(topic);
         topicMeeting.setDescription(meetingData.getDescription());
         topicMeeting.setOpen(meetingData.getOpen());
@@ -220,56 +223,44 @@ public class TopicService {
         }
     }
 
-    // GET /course/{courseId}/topic/{id}
+    // GET /topic/{id}
     @Transactional(readOnly = true)
-    public TopicResponseDto getTopic(String courseId, UUID topicId) {
+    public TopicResponseDto getTopic(UUID topicId) {
         Topic topic = topicRepo.findById(topicId)
                 .orElseThrow(() -> new CustomException("Topic not found", HttpStatus.NOT_FOUND));
-
-        // Validate that topic belongs to the course
-        if (!topic.getSection().getCourse().getId().equals(courseId)) {
-            throw new CustomException("Topic does not belong to the specified course", HttpStatus.BAD_REQUEST);
-        }
 
         return buildTopicResponse(topic);
     }
 
-    // PUT /course/{courseId}/topic/{id}
+    // PUT /topic/{id}
     @Transactional
-    public TopicResponseDto updateTopic(String courseId, UUID topicId, CreateTopicRequest request) {
+    public TopicResponseDto updateTopic(UUID topicId, UpdateTopicRequest request) {
         try {
             Topic existingTopic = topicRepo.findById(topicId)
                     .orElseThrow(() -> new CustomException("Topic not found", HttpStatus.NOT_FOUND));
 
-            // Validate that topic belongs to the course
-            if (!existingTopic.getSection().getCourse().getId().equals(courseId)) {
-                throw new CustomException("Topic does not belong to the specified course", HttpStatus.BAD_REQUEST);
-            }
-
-            // Validate new section if it's being changed
-            if (!existingTopic.getSection().getId().equals(request.getSectionId())) {
-                Section newSection = sectionRepo.findById(request.getSectionId())
-                        .orElseThrow(() -> new CustomException("Section not found", HttpStatus.NOT_FOUND));
-
-                if (!newSection.getCourse().getId().equals(courseId)) {
-                    throw new CustomException("New section does not belong to the specified course",
-                            HttpStatus.BAD_REQUEST);
-                }
-                existingTopic.setSection(newSection);
-            }
-
             // Update base topic fields
-            existingTopic.setTitle(request.getTitle());
-            existingTopic.setType(request.getType());
+            if (request.getTitle() != null)
+                existingTopic.setTitle(request.getTitle());
+            if (request.getType() != null)
+                existingTopic.setType(request.getType());
+
             existingTopic = topicRepo.save(existingTopic);
+            entityManager.flush(); // Ensure Topic is persisted before related entities
 
-            // Delete existing type-specific data if type changed
-            if (!existingTopic.getType().equals(request.getType())) {
-                deleteTopicSpecificData(existingTopic, existingTopic.getType());
+            Object parsedData;
+            // Only handle type-specific data if data is provided
+            if (request.getData() != null) {
+                // If type changed, delete old type-specific data first
+                if (!existingTopic.getType().equals(request.getType())) {
+                    deleteTopicSpecificData(existingTopic, existingTopic.getType());
+                }
+                // Create/update type-specific data
+                parsedData = createTopicSpecificData(existingTopic, request.getType(), request.getData());
+            } else {
+                // No new data, just return current type-specific data
+                parsedData = getTopicSpecificData(existingTopic);
             }
-
-            // Create/update type-specific data
-            Object parsedData = createTopicSpecificData(existingTopic, request.getType(), request.getData());
 
             // Build response
             TopicResponseDto response = new TopicResponseDto();
@@ -286,16 +277,11 @@ public class TopicService {
         }
     }
 
-    // DELETE /course/{courseId}/topic/{id}
+    // DELETE /topic/{id}
     @Transactional
-    public void deleteTopic(String courseId, UUID topicId) {
+    public void deleteTopic(UUID topicId) {
         Topic topic = topicRepo.findById(topicId)
                 .orElseThrow(() -> new CustomException("Topic not found", HttpStatus.NOT_FOUND));
-
-        // Validate that topic belongs to the course
-        if (!topic.getSection().getCourse().getId().equals(courseId)) {
-            throw new CustomException("Topic does not belong to the specified course", HttpStatus.BAD_REQUEST);
-        }
 
         // Delete type-specific data first (handled by cascade, but being explicit)
         deleteTopicSpecificData(topic, topic.getType());
@@ -316,16 +302,12 @@ public class TopicService {
                 .toList();
     }
 
-    // GET /course/{courseId}/section/{sectionId}/topics - Get all topics for a
-    // section
+    // GET /topic/section/{sectionId} - Get all topics for a section
     @Transactional(readOnly = true)
-    public List<TopicResponseDto> getAllTopicsForSection(String courseId, UUID sectionId) {
-        Section section = sectionRepo.findById(sectionId)
+    public List<TopicResponseDto> getAllTopicsForSection(UUID sectionId) {
+        // Validate section exists
+        sectionRepo.findById(sectionId)
                 .orElseThrow(() -> new CustomException("Section not found", HttpStatus.NOT_FOUND));
-
-        if (!section.getCourse().getId().equals(courseId)) {
-            throw new CustomException("Section does not belong to the specified course", HttpStatus.BAD_REQUEST);
-        }
 
         List<Topic> topics = topicRepo.findBySectionIdOrderByTitle(sectionId);
 
@@ -431,7 +413,7 @@ public class TopicService {
         return topicMapper.toFileDataDto(topicFile);
     }
 
-    // Additional methods to match frontend API
+    // Additional aggregate endpoints (across courses)
 
     // Get all quizzes for a specific course
     @Transactional(readOnly = true)

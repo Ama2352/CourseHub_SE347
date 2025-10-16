@@ -10,7 +10,7 @@ public class UpdateCourseRequest {
     private BigDecimal price;
     private String category;
     private String level;
-    private boolean isPublished;
+    private Boolean isPublished;
     private String imageUrl;
     private String description;
 }

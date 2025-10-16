@@ -3,6 +3,7 @@ package lms.coursehub.controllers;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lms.coursehub.models.dtos.section.CreateSectionRequest;
+import lms.coursehub.models.dtos.section.UpdateSectionRequest;
 import lms.coursehub.models.dtos.section.SectionResponseDto;
 import lms.coursehub.services.SectionService;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +37,7 @@ public class SectionController {
     @PutMapping("/{sectionId}")
     public ResponseEntity<SectionResponseDto> updateSection(
             @PathVariable UUID sectionId,
-            @Valid @RequestBody CreateSectionRequest request) {
+            @Valid @RequestBody UpdateSectionRequest request) {
         SectionResponseDto response = sectionService.updateSection(sectionId, request);
         return ResponseEntity.ok(response);
     }

@@ -4,8 +4,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lms.coursehub.models.dtos.topic.CreateTopicRequest;
 import lms.coursehub.models.dtos.topic.TopicResponseDto;
+import lms.coursehub.models.dtos.topic.UpdateTopicRequest;
 import lms.coursehub.services.TopicService;
 import lombok.RequiredArgsConstructor;
+
+import org.hibernate.sql.Update;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,7 +18,7 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/course/{courseId}/topic")
+@RequestMapping("/topic")
 @Tag(name = "Topic Management")
 public class TopicController {
 
@@ -23,44 +26,40 @@ public class TopicController {
 
     @PostMapping
     public ResponseEntity<TopicResponseDto> createTopic(
-            @PathVariable String courseId,
             @Valid @RequestBody CreateTopicRequest request) {
 
-        TopicResponseDto response = topicService.createTopic(courseId, request);
+        TopicResponseDto response = topicService.createTopic(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/{topicId}")
     public ResponseEntity<TopicResponseDto> getTopic(
-            @PathVariable String courseId,
             @PathVariable UUID topicId) {
 
-        TopicResponseDto response = topicService.getTopic(courseId, topicId);
+        TopicResponseDto response = topicService.getTopic(topicId);
         return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{topicId}")
     public ResponseEntity<TopicResponseDto> updateTopic(
-            @PathVariable String courseId,
             @PathVariable UUID topicId,
-            @Valid @RequestBody CreateTopicRequest request) {
+            @Valid @RequestBody UpdateTopicRequest request) {
 
-        TopicResponseDto response = topicService.updateTopic(courseId, topicId, request);
+        TopicResponseDto response = topicService.updateTopic(topicId, request);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{topicId}")
     public ResponseEntity<Void> deleteTopic(
-            @PathVariable String courseId,
             @PathVariable UUID topicId) {
 
-        topicService.deleteTopic(courseId, topicId);
+        topicService.deleteTopic(topicId);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping
     public ResponseEntity<List<TopicResponseDto>> getAllTopicsForCourse(
-            @PathVariable String courseId) {
+            @RequestParam String courseId) {
 
         List<TopicResponseDto> responses = topicService.getAllTopicsForCourse(courseId);
         return ResponseEntity.ok(responses);
@@ -68,7 +67,7 @@ public class TopicController {
 
     @GetMapping("/quizzes")
     public ResponseEntity<List<TopicResponseDto>> getAllQuizzesOfCourse(
-            @PathVariable String courseId) {
+            @RequestParam String courseId) {
 
         List<TopicResponseDto> responses = topicService.getAllQuizzesOfCourse(courseId);
         return ResponseEntity.ok(responses);
@@ -76,7 +75,7 @@ public class TopicController {
 
     @GetMapping("/assignments")
     public ResponseEntity<List<TopicResponseDto>> getAllAssignmentsOfCourse(
-            @PathVariable String courseId) {
+            @RequestParam String courseId) {
 
         List<TopicResponseDto> responses = topicService.getAllAssignmentsOfCourse(courseId);
         return ResponseEntity.ok(responses);
@@ -84,7 +83,7 @@ public class TopicController {
 
     @GetMapping("/meetings")
     public ResponseEntity<List<TopicResponseDto>> getAllMeetingsOfCourse(
-            @PathVariable String courseId) {
+            @RequestParam String courseId) {
 
         List<TopicResponseDto> responses = topicService.getAllMeetingsOfCourse(courseId);
         return ResponseEntity.ok(responses);
@@ -92,7 +91,7 @@ public class TopicController {
 
     @GetMapping("/works")
     public ResponseEntity<List<TopicResponseDto>> getAllWorksOfCourse(
-            @PathVariable String courseId) {
+            @RequestParam String courseId) {
 
         List<TopicResponseDto> responses = topicService.getAllWorksOfCourse(courseId);
         return ResponseEntity.ok(responses);

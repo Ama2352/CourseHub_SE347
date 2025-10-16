@@ -10,7 +10,6 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring", uses = MappingUtils.class)
 public interface CourseMapper {
 
-    @Mapping(target = "id", ignore = true)
     @Mapping(target = "creator", ignore = true)
     @Mapping(target = "enrollmentDetails", ignore = true)
     @Mapping(target = "price", ignore = true)
