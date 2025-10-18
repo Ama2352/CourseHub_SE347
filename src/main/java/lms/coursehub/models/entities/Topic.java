@@ -35,4 +35,7 @@ public class Topic {
 
     @OneToOne(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
     private TopicAssignment topicAssignment;
+
+    @OneToOne(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
+    private TopicQuiz topicQuiz;
 }
