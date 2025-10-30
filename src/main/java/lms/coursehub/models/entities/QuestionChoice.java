@@ -23,7 +23,8 @@ public class QuestionChoice {
     private UUID id;
 
     private String text;
-    private BigDecimal gradePercent;
+    private boolean isCorrect;
+    private BigDecimal grade;
     private String feedback;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
