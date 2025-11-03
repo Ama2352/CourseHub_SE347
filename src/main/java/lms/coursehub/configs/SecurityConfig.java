@@ -22,20 +22,21 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity, JwtFilter filter) throws Exception {
-        return httpSecurity
-                .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/auth/**",
-                                "/error"
-                        )
-                        .permitAll()
-                        .anyRequest().authenticated())
-                .addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class)
-                .build();
+    return httpSecurity
+        .csrf(AbstractHttpConfigurer::disable)
+        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll() // Cho phép OPTIONS cho CORS
+            .requestMatchers(
+                "/v3/api-docs/**",
+                "/swagger-ui/**",
+                "/auth/**",
+                "/error"
+            )
+            .permitAll()
+            .anyRequest().authenticated())
+        .addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class)
+        .build();
     }
 
     @Bean

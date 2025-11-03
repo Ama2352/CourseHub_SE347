@@ -23,7 +23,7 @@ public class AuthController {
 
     private final UserService userService;
 
-    @PostMapping("/register")
+    @PostMapping("/signup")
     public ResponseEntity<Void> register(@Valid @RequestBody RegisterRequest request) {
         userService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).build();
@@ -35,7 +35,8 @@ public class AuthController {
         return ResponseEntity.ok()
                 .body(Map.of(
                         "accessToken", tokens.get("accessToken"),
-                        "refreshToken", tokens.get("refreshToken")
+                        "refreshToken", tokens.get("refreshToken"),
+                        "message", "Login successful"
                 ));
     }
 }
