@@ -10,6 +10,7 @@ import lms.coursehub.models.dtos.user.UserResponseDto;
 import lms.coursehub.models.dtos.user.UserWorkResponseDto;
 import lms.coursehub.models.entities.*;
 import lms.coursehub.models.enums.UserRole;
+import lms.coursehub.repositories.CourseRepo;
 import lms.coursehub.repositories.EnrollmentDetailRepo;
 import lms.coursehub.repositories.TopicRepo;
 import lms.coursehub.repositories.UserRepo;
@@ -39,7 +40,8 @@ public class UserService {
     private final UserMapper userMapper;
     private final EnrollmentDetailRepo enrollmentDetailRepo;
     private final TopicRepo topicRepo;
-    private final lms.coursehub.repositories.CourseRepo courseRepo;
+    private final CourseRepo courseRepo;
+    private final CustomUserDetailsService customUserDetailsService;
 
     public User findByEmail(String email) {
         return userRepo.findByEmail(email)
@@ -50,15 +52,10 @@ public class UserService {
         String email = request.getEmail();
         String username = request.getUsername();
         String password = request.getPassword();
-        String confirmPassword = request.getConfirmPassword();
         UserRole role = UserRole.valueOf(request.getRole());
 
-        if(userRepo.existsByEmail(email)) {
+        if (userRepo.existsByEmail(email)) {
             throw new CustomException("Email already in use", HttpStatus.BAD_REQUEST);
-        }
-
-        if(!password.equals(confirmPassword)) {
-            throw new CustomException("Confirm passwords do not match", HttpStatus.BAD_REQUEST);
         }
 
         String encodedPassword = passwordEncoder.encode(password);
@@ -77,8 +74,27 @@ public class UserService {
 
         return Map.of(
                 "accessToken", accessToken,
-                "refreshToken", refreshToken
-        );
+                "refreshToken", refreshToken);
+    }
+
+    public void logout(String refreshToken) {
+        try {
+            jwtService.revokeRefreshToken(refreshToken);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid refresh token");
+        }
+    }
+
+    public String refreshAccessToken(String refreshToken) {
+        if (!jwtService.validateRefreshToken(refreshToken)) {
+            throw new IllegalArgumentException("Invalid refresh token");
+        }
+
+        String email = jwtService.extractEmailFromToken(refreshToken);
+        UserDetails userDetails = customUserDetailsService.loadUserByUsername(email);
+        String newAccessToken = jwtService.generateAccessToken(email, userDetails.getAuthorities());
+
+        return newAccessToken;
     }
 
     public User getCurrentUser() {
@@ -112,12 +128,12 @@ public class UserService {
     @Transactional
     public UserResponseDto updateProfile(UpdateProfileRequest request) {
         User user = getCurrentUser();
-        
+
         user.setUsername(request.getUsername());
         if (request.getAvatar() != null) {
             user.setAvatarUrl(request.getAvatar());
         }
-        
+
         User updatedUser = userRepo.save(user);
         return userMapper.toDto(updatedUser);
     }
@@ -128,12 +144,12 @@ public class UserService {
     @Transactional
     public void updatePassword(UpdatePasswordRequest request) {
         User user = getCurrentUser();
-        
+
         // Verify old password
         if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
             throw new CustomException("Old password is incorrect", HttpStatus.BAD_REQUEST);
         }
-        
+
         // Update to new password
         String encodedNewPassword = passwordEncoder.encode(request.getNewPassword());
         user.setPassword(encodedNewPassword);
@@ -145,22 +161,22 @@ public class UserService {
      */
     @Transactional
     public void leaveCourse(String courseId) {
-    User user = getCurrentUser();
+        User user = getCurrentUser();
 
-    EnrollmentDetail enrollment = enrollmentDetailRepo
-        .findByStudentIdAndCourseId(user.getId(), courseId)
-        .orElseThrow(() -> new CustomException("Enrollment not found", HttpStatus.NOT_FOUND));
+        EnrollmentDetail enrollment = enrollmentDetailRepo
+                .findByStudentIdAndCourseId(user.getId(), courseId)
+                .orElseThrow(() -> new CustomException("Enrollment not found", HttpStatus.NOT_FOUND));
 
-    // Decrement totalJoined in Course
-    Course course = enrollment.getCourse();
-    int currentJoined = course.getTotalJoined();
-    if (currentJoined > 0) {
-        course.setTotalJoined(currentJoined - 1);
-    }
+        // Decrement totalJoined in Course
+        Course course = enrollment.getCourse();
+        int currentJoined = course.getTotalJoined();
+        if (currentJoined > 0) {
+            course.setTotalJoined(currentJoined - 1);
+        }
 
-    enrollmentDetailRepo.delete(enrollment);
-    // Save updated course
-    courseRepo.save(course);
+        enrollmentDetailRepo.delete(enrollment);
+        // Save updated course
+        courseRepo.save(course);
     }
 
     /**
@@ -169,18 +185,18 @@ public class UserService {
     @Transactional(readOnly = true)
     public List<UserWorkResponseDto> getUserWork(String type, String start, String end) {
         User user = getCurrentUser();
-        
+
         // Get course IDs based on user role
         List<String> courseIds = getCourseIdsByUserRole(user);
-        
+
         if (courseIds.isEmpty()) {
             return new ArrayList<>();
         }
-        
+
         // Parse dates if provided
         LocalDateTime startDate = start != null ? LocalDateTime.parse(start) : null;
         LocalDateTime endDate = end != null ? LocalDateTime.parse(end) : null;
-        
+
         // Get topics based on type and date range
         List<Topic> topics;
         if (type != null) {
@@ -188,7 +204,7 @@ public class UserService {
         } else {
             topics = getAllWorkTopics(courseIds, startDate, endDate);
         }
-        
+
         // Map to DTO
         return topics.stream()
                 .map(this::mapTopicToUserWorkDto)
@@ -213,7 +229,8 @@ public class UserService {
     }
 
     private List<Topic> getTopicsByType(List<String> courseIds, String type, LocalDateTime start, LocalDateTime end) {
-        // This is a simplified version - you may need to adjust based on your Topic entity structure
+        // This is a simplified version - you may need to adjust based on your Topic
+        // entity structure
         List<Topic> allTopics = topicRepo.findAll();
         return allTopics.stream()
                 .filter(t -> courseIds.contains(t.getSection().getCourse().getId()))
@@ -235,11 +252,11 @@ public class UserService {
         if (start == null && end == null) {
             return true;
         }
-        
+
         // Get open and close dates based on topic type
         LocalDateTime topicOpen = null;
         LocalDateTime topicClose = null;
-        
+
         String type = topic.getType().toLowerCase();
         switch (type) {
             case "quiz":
@@ -248,43 +265,44 @@ public class UserService {
                     topicClose = topic.getTopicQuiz().getClose();
                 }
                 break;
-                
+
             case "assignment":
                 if (topic.getTopicAssignment() != null) {
                     topicOpen = topic.getTopicAssignment().getOpen();
                     topicClose = topic.getTopicAssignment().getClose();
                 }
                 break;
-                
+
             case "meeting":
                 // Note: Topic entity doesn't have topicMeeting relationship
                 return false;
-                
+
             default:
                 return false;
         }
-        
+
         // If topic doesn't have dates, exclude it
         if (topicOpen == null) {
             return false;
         }
-        
+
         // Check if topic's date range overlaps with filter date range
-        // Topic is included if its open-close period overlaps with start-end filter period
-        
+        // Topic is included if its open-close period overlaps with start-end filter
+        // period
+
         if (start != null) {
             LocalDateTime topicEndDate = topicClose != null ? topicClose : topicOpen;
             if (topicEndDate.isBefore(start)) {
                 return false;
             }
         }
-        
+
         if (end != null) {
             if (topicOpen.isAfter(end)) {
                 return false;
             }
         }
-        
+
         return true;
     }
 
@@ -296,10 +314,10 @@ public class UserService {
         dto.setCourseId(topic.getSection().getCourse().getId());
         dto.setCourseTitle(topic.getSection().getCourse().getTitle());
         dto.setSectionTitle(topic.getSection().getTitle());
-        
+
         // Set open/close dates based on topic type
         String type = topic.getType().toLowerCase();
-        
+
         switch (type) {
             case "quiz":
                 if (topic.getTopicQuiz() != null) {
@@ -313,19 +331,20 @@ public class UserService {
                     dto.setClose(topic.getTopicAssignment().getClose());
                 }
                 break;
-                
+
             case "meeting":
-                // Note: Topic entity doesn't have topicMeeting relationship in the provided code
+                // Note: Topic entity doesn't have topicMeeting relationship in the provided
+                // code
                 // You may need to add this relationship or query separately
                 dto.setOpen(null);
                 dto.setClose(null);
                 break;
-                
+
             default:
                 dto.setOpen(null);
                 dto.setClose(null);
         }
-        
+
         return dto;
     }
 }

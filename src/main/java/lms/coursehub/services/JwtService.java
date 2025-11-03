@@ -13,6 +13,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
+
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
 
@@ -84,20 +86,23 @@ public class JwtService {
 
     public boolean validateRefreshToken(String token) {
         return refreshTokenRepo.findByToken(token)
-                .filter(rt ->
-                        !isTokenExpired(rt.getToken())
-                            && rt.getRevokedAt() == null
-                )
+                .filter(rt -> !isTokenExpired(rt.getToken())
+                        && rt.getRevokedAt() == null)
                 .isPresent();
     }
 
     public void revokeRefreshToken(String token) {
-        refreshTokenRepo.deleteByToken(token);
+        refreshTokenRepo.findByToken(token).ifPresent(rt -> {
+            rt.setRevokedAt(LocalDateTime.now());
+            refreshTokenRepo.save(rt);
+        });
     }
 
     public void revokeAllUserRefreshTokens(String email) {
         userRepo.findByEmail(email).ifPresent(user -> {
-            user.getRefreshTokens().clear();
+            user.getRefreshTokens().stream()
+                    .filter(rt -> rt.getRevokedAt() == null)
+                    .forEach(rt -> rt.setRevokedAt(LocalDateTime.now()));
             userRepo.save(user);
         });
     }
