@@ -34,6 +34,12 @@ public class CourseService {
 
     @Transactional
     public void createCourse(CreateCourseRequest request) {
+
+        if (courseRepo.existsById(request.getId())) {
+            throw new CustomException("Course ID already exists. Please choose a different ID",
+                    HttpStatus.BAD_REQUEST);
+        }
+
         if (courseRepo.existsByTitle(request.getTitle()))
             throw new CustomException("A course with this name already exists. Please choose a different name",
                     HttpStatus.BAD_REQUEST);
@@ -49,8 +55,13 @@ public class CourseService {
         Course course = courseRepo.findById(id)
                 .orElseThrow(() -> new CustomException("Course not found", HttpStatus.NOT_FOUND));
 
-        if (request.getTitle() != null)
+        if (request.getTitle() != null) {
+            if (courseRepo.existsByTitle(request.getTitle())) {
+                throw new CustomException("A course with this name already exists. Please choose a different name",
+                        HttpStatus.BAD_REQUEST);
+            }
             course.setTitle(request.getTitle());
+        }
         if (request.getDescription() != null)
             course.setDescription(request.getDescription());
         if (request.getImageUrl() != null)
