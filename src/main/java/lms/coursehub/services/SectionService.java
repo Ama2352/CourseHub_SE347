@@ -38,6 +38,8 @@ public class SectionService {
     public SectionResponseDto getSectionById(UUID sectionId) {
         Section section = sectionRepo.findById(sectionId)
                 .orElseThrow(() -> new CustomException("Section not found", HttpStatus.NOT_FOUND));
+        // Force initialization of lazy collection
+        section.getTopics().size();
         return sectionMapper.toResponseDto(section);
     }
 
@@ -74,6 +76,8 @@ public class SectionService {
         courseService.findCourseById(courseId);
 
         List<Section> sections = sectionRepo.findByCourseIdOrderByPosition(courseId);
+        // Force initialization of lazy collections
+        sections.forEach(section -> section.getTopics().size());
         return sections.stream()
                 .map(sectionMapper::toResponseDto)
                 .toList();

@@ -33,7 +33,7 @@ public class CourseService {
     }
 
     @Transactional
-    public void createCourse(CreateCourseRequest request) {
+    public CourseResponseDto createCourse(CreateCourseRequest request) {
 
         if (courseRepo.existsById(request.getId())) {
             throw new CustomException("Course ID already exists. Please choose a different ID",
@@ -47,11 +47,12 @@ public class CourseService {
         Course course = courseMapper.toEntity(request);
         course.setCreator(userService.getCurrentUser());
 
-        courseRepo.save(course);
+        course = courseRepo.save(course);
+        return courseMapper.toResponseDto(course);
     }
 
     @Transactional // This method still miss array-fields in the request
-    public void updateCourse(String id, UpdateCourseRequest request) {
+    public CourseResponseDto updateCourse(String id, UpdateCourseRequest request) {
         Course course = courseRepo.findById(id)
                 .orElseThrow(() -> new CustomException("Course not found", HttpStatus.NOT_FOUND));
 
@@ -73,7 +74,8 @@ public class CourseService {
         if (request.getIsPublished() != null)
             course.setPublished(request.getIsPublished());
 
-        courseRepo.save(course);
+        course = courseRepo.save(course);
+        return courseMapper.toResponseDto(course);
     }
 
     @Transactional
@@ -98,13 +100,26 @@ public class CourseService {
     @Transactional(readOnly = true)
     public CourseResponseDto getCourseById(String courseId) {
         Course course = findCourseById(courseId);
-        return courseMapper.toResponseDto(course);
+        // Force initialization of lazy collections within transaction
+        course.getEnrollmentDetails().size();
+        course.getSections().forEach(section -> {
+            section.getTopics().size();
+        });
+        CourseResponseDto dto = courseMapper.toResponseDto(course);
+        return dto;
     }
 
     // GET /course - Get all public courses or teacher courses
     @Transactional(readOnly = true)
     public List<CourseResponseDto> getPublicCourses() {
         List<Course> courses = courseRepo.findByIsPublishedTrue();
+        // Force initialization of lazy collections
+        courses.forEach(course -> {
+            course.getEnrollmentDetails().size();
+            course.getSections().forEach(section -> {
+                section.getTopics().size();
+            });
+        });
         return courses.stream()
                 .map(courseMapper::toResponseDto)
                 .toList();
@@ -114,6 +129,13 @@ public class CourseService {
     @Transactional(readOnly = true)
     public List<CourseResponseDto> getTeacherCourses(UUID userId) {
         List<Course> courses = courseRepo.findByCreatorId(userId);
+        // Force initialization of lazy collections
+        courses.forEach(course -> {
+            course.getEnrollmentDetails().size();
+            course.getSections().forEach(section -> {
+                section.getTopics().size();
+            });
+        });
         return courses.stream()
                 .map(courseMapper::toResponseDto)
                 .toList();

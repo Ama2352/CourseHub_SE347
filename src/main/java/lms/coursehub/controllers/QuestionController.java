@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/question")
+@RequestMapping("/question")
 public class QuestionController {
     @Autowired
     private QuestionService questionService;
@@ -20,7 +20,7 @@ public class QuestionController {
     @PostMapping
     public ResponseEntity<QuestionResponseDto> createQuestion(
             @RequestBody CreateQuestionRequest request,
-            @RequestParam String courseId) {
+            @RequestParam(required = false) String courseId) {
         return ResponseEntity.ok(questionService.createQuestion(request, courseId));
     }
 
@@ -33,12 +33,12 @@ public class QuestionController {
     public ResponseEntity<QuestionResponseDto> updateQuestion(
             @PathVariable UUID id,
             @RequestBody UpdateQuestionRequest request,
-            @RequestParam String courseId) {
+            @RequestParam(required = false) String courseId) {
         return ResponseEntity.ok(questionService.updateQuestion(id, request, courseId));
     }
 
     @GetMapping
-    public ResponseEntity<List<QuestionResponseDto>> getQuestionBank(@RequestParam String courseId) {
+    public ResponseEntity<List<QuestionResponseDto>> getQuestionBank(@RequestParam(required = false) String courseId) {
         return ResponseEntity.ok(questionService.getQuestionBank(courseId));
     }
 }

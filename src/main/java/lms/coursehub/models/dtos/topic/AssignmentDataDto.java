@@ -1,5 +1,6 @@
 package lms.coursehub.models.dtos.topic;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,5 +15,8 @@ public class AssignmentDataDto {
     private LocalDateTime close;
     private String remindToGrade;
     private Integer maximumFile;
+    private String maximumFileSize;
+
+    @JsonAlias({ "cloudinaryFiles", "assignmentFiles" })
     private List<CloudinaryFileDto> assignmentFiles;
 }

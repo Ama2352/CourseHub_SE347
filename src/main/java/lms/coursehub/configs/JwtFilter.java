@@ -40,7 +40,10 @@ public class JwtFilter extends OncePerRequestFilter {
 
         if (token == null) {
             token = cookieService.extractAccessTokenFromCookie(request);
-            email = jwtService.extractEmailFromToken(token);
+            // Only extract email if token exists
+            if (token != null) {
+                email = jwtService.extractEmailFromToken(token);
+            }
         }
 
         if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
