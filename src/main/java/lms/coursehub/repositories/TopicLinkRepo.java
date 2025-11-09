@@ -1,8 +1,11 @@
-package lms.coursehub.repositories;
+package com.letslive.letslearnbackend.repositories;
 
-import lms.coursehub.models.entities.TopicLink;
+import com.letslive.letslearnbackend.entities.TopicLink;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
 import java.util.UUID;
 
-public interface TopicLinkRepo extends JpaRepository<TopicLink, UUID> {
+public interface TopicLinkRepository extends JpaRepository<TopicLink, UUID> {
+    Optional<TopicLink> findByTopicId(UUID id);
 }
