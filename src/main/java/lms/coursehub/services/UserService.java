@@ -12,6 +12,7 @@ import lms.coursehub.models.entities.*;
 import lms.coursehub.models.enums.UserRole;
 import lms.coursehub.repositories.CourseRepo;
 import lms.coursehub.repositories.EnrollmentDetailRepo;
+import lms.coursehub.repositories.RefreshTokenRepo;
 import lms.coursehub.repositories.TopicRepo;
 import lms.coursehub.repositories.UserRepo;
 import lombok.RequiredArgsConstructor;
@@ -63,6 +64,18 @@ public class UserService {
         userRepo.save(user);
     }
 
+    private void saveRefreshToken(String refreshToken, String email) {
+        User user = findByEmail(email);
+        RefreshToken token = new RefreshToken();
+        token.setToken(refreshToken);
+        token.setUser(user);
+        if (user.getRefreshTokens() == null) {
+            user.setRefreshTokens(new HashSet<>());
+        }
+        user.getRefreshTokens().add(token);
+        userRepo.save(user);
+    }
+
     public Map<String, String> login(LoginRequest request) {
         Authentication authentication = authManager
                 .authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
@@ -71,6 +84,8 @@ public class UserService {
 
         String accessToken = jwtService.generateAccessToken(request.getEmail(), userDetails.getAuthorities());
         String refreshToken = jwtService.generateRefreshToken(request.getEmail());
+
+        saveRefreshToken(refreshToken, request.getEmail());
 
         return Map.of(
                 "accessToken", accessToken,
