@@ -5,15 +5,19 @@ import jakarta.validation.Valid;
 import lms.coursehub.models.dtos.course.CreateCourseRequest;
 import lms.coursehub.models.dtos.course.CourseResponseDto;
 import lms.coursehub.models.dtos.course.UpdateCourseRequest;
+import lms.coursehub.models.dtos.reports.AllAssignmentsReportDto;
+import lms.coursehub.models.dtos.reports.AllQuizzesReportDto;
 import lms.coursehub.models.dtos.topic.TopicResponseDto;
 
 import lms.coursehub.services.CourseService;
 import lms.coursehub.services.TopicService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,9 +31,9 @@ public class CourseController {
     private final TopicService topicService;
 
     @PostMapping
-    public ResponseEntity<Void> createCourse(@Valid @RequestBody CreateCourseRequest request) {
-        courseService.createCourse(request);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+    public ResponseEntity<CourseResponseDto> createCourse(@Valid @RequestBody CreateCourseRequest request) {
+        CourseResponseDto response = courseService.createCourse(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/{courseId}")
@@ -50,11 +54,11 @@ public class CourseController {
     }
 
     @PutMapping("/{courseId}")
-    public ResponseEntity<Void> updateCourse(
+    public ResponseEntity<CourseResponseDto> updateCourse(
             @PathVariable String courseId,
             @Valid @RequestBody UpdateCourseRequest request) {
-        courseService.updateCourse(courseId, request);
-        return ResponseEntity.ok().build();
+        CourseResponseDto response = courseService.updateCourse(courseId, request);
+        return ResponseEntity.ok(response);
     }
 
     @PatchMapping("/{courseId}/join")
@@ -90,5 +94,23 @@ public class CourseController {
         }
 
         return ResponseEntity.ok(responses);
+    }
+
+    @GetMapping("/{courseId}/quiz-report")
+    public ResponseEntity<AllQuizzesReportDto> getAllQuizzesReport(
+            @PathVariable String courseId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
+        AllQuizzesReportDto report = topicService.getAllQuizzesReport(courseId, start, end);
+        return ResponseEntity.ok(report);
+    }
+
+    @GetMapping("/{courseId}/assignment-report")
+    public ResponseEntity<AllAssignmentsReportDto> getAllAssignmentsReport(
+            @PathVariable String courseId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
+        AllAssignmentsReportDto report = topicService.getAllAssignmentsReport(courseId, start, end);
+        return ResponseEntity.ok(report);
     }
 }

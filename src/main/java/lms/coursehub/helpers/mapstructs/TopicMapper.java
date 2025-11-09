@@ -10,6 +10,7 @@ import lms.coursehub.models.dtos.topic.MeetingDataDto;
 import lms.coursehub.models.dtos.topic.PageDataDto;
 import lms.coursehub.models.dtos.topic.QuestionDto;
 import lms.coursehub.models.dtos.topic.QuizDataDto;
+import lms.coursehub.models.dtos.user.UserResponseDto;
 import lms.coursehub.models.entities.CloudinaryFile;
 import lms.coursehub.models.entities.Question;
 import lms.coursehub.models.entities.Topic;
@@ -19,6 +20,7 @@ import lms.coursehub.models.entities.TopicLink;
 import lms.coursehub.models.entities.TopicMeeting;
 import lms.coursehub.models.entities.TopicPage;
 import lms.coursehub.models.entities.TopicQuiz;
+import lms.coursehub.models.entities.User;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -52,4 +54,6 @@ public interface TopicMapper {
 
     @Mapping(source = "file", target = "file")
     FileDataDto toFileDataDto(TopicFile topicFile);
+
+    UserResponseDto toUserDto(User user);
 }

@@ -52,9 +52,6 @@ public class Question {
     @ManyToOne(fetch = FetchType.LAZY)
     private User modifier;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    private Course course;
-
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<QuestionChoice> questionChoices = new ArrayList<>();
 }

@@ -13,13 +13,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class QuestionService {
     private final QuestionRepo questionRepo;
-    private final CourseRepo courseRepo;
     private final QuestionChoiceRepo questionChoiceRepo;
     private final UserService userService;
 
@@ -28,22 +26,14 @@ public class QuestionService {
                 .orElseThrow(() -> new CustomException("Question not found", HttpStatus.NOT_FOUND));
     }
 
-    private Course findCourseById(String id) {
-        return courseRepo.findById(id)
-                .orElseThrow(() -> new CustomException("Course not found", HttpStatus.NOT_FOUND));
-    }
-
     @Transactional
-    public QuestionResponseDto createQuestion(CreateQuestionRequest request, String courseId) {
-        Course course = findCourseById(courseId);
-        
+    public QuestionResponseDto createQuestion(CreateQuestionRequest request) {
         Question question = QuestionMapper.INSTANCE.toEntity(request);
-        question.setCourse(course);
         question.setCreator(userService.getCurrentUser());
-        
+
         Question savedQuestion = questionRepo.save(question);
         handleQuestionChoices(savedQuestion, request.getData());
-        
+
         // Refresh to get updated choices
         savedQuestion = findQuestionById(savedQuestion.getId());
         return QuestionMapper.INSTANCE.toDto(savedQuestion);
@@ -56,14 +46,12 @@ public class QuestionService {
     }
 
     @Transactional
-    public QuestionResponseDto updateQuestion(UUID id, UpdateQuestionRequest request, String courseId) {
+    public QuestionResponseDto updateQuestion(UUID id, UpdateQuestionRequest request) {
         Question existingQuestion = findQuestionById(id);
-        Course course = findCourseById(courseId);
 
         // Use mapper to update fields
         QuestionMapper.INSTANCE.updateEntityFromDto(request, existingQuestion);
-        
-        existingQuestion.setCourse(course);
+
         existingQuestion.setModifier(userService.getCurrentUser());
 
         // Update choices if present and type is CHOICE
@@ -77,9 +65,8 @@ public class QuestionService {
     }
 
     @Transactional(readOnly = true)
-    public List<QuestionResponseDto> getQuestionBank(String courseId) {
-        Course course = findCourseById(courseId);
-        List<Question> questions = questionRepo.findByCourse(course);
+    public List<QuestionResponseDto> getQuestionBank() {
+        List<Question> questions = questionRepo.findAll();
         return questions.stream()
                 .map(QuestionMapper.INSTANCE::toDto)
                 .toList();
@@ -97,6 +84,5 @@ public class QuestionService {
             }
         }
     }
-
 
 }

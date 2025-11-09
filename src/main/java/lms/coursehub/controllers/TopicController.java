@@ -2,13 +2,14 @@ package lms.coursehub.controllers;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lms.coursehub.models.dtos.reports.SingleAssignmentReportDto;
+import lms.coursehub.models.dtos.reports.SingleQuizReportDto;
 import lms.coursehub.models.dtos.topic.CreateTopicRequest;
 import lms.coursehub.models.dtos.topic.TopicResponseDto;
 import lms.coursehub.models.dtos.topic.UpdateTopicRequest;
 import lms.coursehub.services.TopicService;
 import lombok.RequiredArgsConstructor;
 
-import org.hibernate.sql.Update;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +19,7 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/topic")
+@RequestMapping("/course/{courseId}/topic")
 @Tag(name = "Topic Management")
 public class TopicController {
 
@@ -26,75 +27,57 @@ public class TopicController {
 
     @PostMapping
     public ResponseEntity<TopicResponseDto> createTopic(
+            @PathVariable String courseId,
             @Valid @RequestBody CreateTopicRequest request) {
 
-        TopicResponseDto response = topicService.createTopic(request);
+        TopicResponseDto response = topicService.createTopic(courseId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/{topicId}")
     public ResponseEntity<TopicResponseDto> getTopic(
+            @PathVariable String courseId,
             @PathVariable UUID topicId) {
 
-        TopicResponseDto response = topicService.getTopic(topicId);
+        TopicResponseDto response = topicService.getTopic(courseId, topicId);
         return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{topicId}")
     public ResponseEntity<TopicResponseDto> updateTopic(
+            @PathVariable String courseId,
             @PathVariable UUID topicId,
             @Valid @RequestBody UpdateTopicRequest request) {
 
-        TopicResponseDto response = topicService.updateTopic(topicId, request);
+        TopicResponseDto response = topicService.updateTopic(courseId, topicId, request);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{topicId}")
     public ResponseEntity<Void> deleteTopic(
+            @PathVariable String courseId,
             @PathVariable UUID topicId) {
 
-        topicService.deleteTopic(topicId);
+        topicService.deleteTopic(courseId, topicId);
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping
-    public ResponseEntity<List<TopicResponseDto>> getAllTopicsForCourse(
-            @RequestParam String courseId) {
+    @GetMapping("/{topicId}/quiz-report")
+    public ResponseEntity<SingleQuizReportDto> getQuizReport(
+            @PathVariable String courseId,
+            @PathVariable UUID topicId) {
 
-        List<TopicResponseDto> responses = topicService.getAllTopicsForCourse(courseId);
-        return ResponseEntity.ok(responses);
+        SingleQuizReportDto report = topicService.getSingleQuizReport(courseId, topicId);
+        return ResponseEntity.ok(report);
     }
 
-    @GetMapping("/quizzes")
-    public ResponseEntity<List<TopicResponseDto>> getAllQuizzesOfCourse(
-            @RequestParam String courseId) {
+    @GetMapping("/{topicId}/assignment-report")
+    public ResponseEntity<SingleAssignmentReportDto> getAssignmentReport(
+            @PathVariable String courseId,
+            @PathVariable UUID topicId) {
 
-        List<TopicResponseDto> responses = topicService.getAllQuizzesOfCourse(courseId);
-        return ResponseEntity.ok(responses);
-    }
-
-    @GetMapping("/assignments")
-    public ResponseEntity<List<TopicResponseDto>> getAllAssignmentsOfCourse(
-            @RequestParam String courseId) {
-
-        List<TopicResponseDto> responses = topicService.getAllAssignmentsOfCourse(courseId);
-        return ResponseEntity.ok(responses);
-    }
-
-    @GetMapping("/meetings")
-    public ResponseEntity<List<TopicResponseDto>> getAllMeetingsOfCourse(
-            @RequestParam String courseId) {
-
-        List<TopicResponseDto> responses = topicService.getAllMeetingsOfCourse(courseId);
-        return ResponseEntity.ok(responses);
-    }
-
-    @GetMapping("/works")
-    public ResponseEntity<List<TopicResponseDto>> getAllWorksOfCourse(
-            @RequestParam String courseId) {
-
-        List<TopicResponseDto> responses = topicService.getAllWorksOfCourse(courseId);
-        return ResponseEntity.ok(responses);
+        SingleAssignmentReportDto report = topicService.getSingleAssignmentReport(courseId, topicId);
+        return ResponseEntity.ok(report);
     }
 }
 

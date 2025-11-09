@@ -12,16 +12,15 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/question")
+@RequestMapping("/question")
 public class QuestionController {
     @Autowired
     private QuestionService questionService;
 
     @PostMapping
     public ResponseEntity<QuestionResponseDto> createQuestion(
-            @RequestBody CreateQuestionRequest request,
-            @RequestParam String courseId) {
-        return ResponseEntity.ok(questionService.createQuestion(request, courseId));
+            @RequestBody CreateQuestionRequest request) {
+        return ResponseEntity.ok(questionService.createQuestion(request));
     }
 
     @GetMapping("/{id}")
@@ -32,13 +31,12 @@ public class QuestionController {
     @PutMapping("/{id}")
     public ResponseEntity<QuestionResponseDto> updateQuestion(
             @PathVariable UUID id,
-            @RequestBody UpdateQuestionRequest request,
-            @RequestParam String courseId) {
-        return ResponseEntity.ok(questionService.updateQuestion(id, request, courseId));
+            @RequestBody UpdateQuestionRequest request) {
+        return ResponseEntity.ok(questionService.updateQuestion(id, request));
     }
 
     @GetMapping
-    public ResponseEntity<List<QuestionResponseDto>> getQuestionBank(@RequestParam String courseId) {
-        return ResponseEntity.ok(questionService.getQuestionBank(courseId));
+    public ResponseEntity<List<QuestionResponseDto>> getQuestionBank() {
+        return ResponseEntity.ok(questionService.getQuestionBank());
     }
 }

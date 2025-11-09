@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/topic/{topicId}/quiz-response")
+@RequestMapping("/topic/{topicId}/quiz-response")
 @RequiredArgsConstructor
 public class QuizResponseController {
     private final QuizResponseService quizResponseService;

@@ -30,6 +30,7 @@ public class TopicAssignment {
     private LocalDateTime close;
     private String remindToGrade;
     private int maximumFile;
+    private String maximumFileSize;
 
     @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @JoinTable(name = "topic_assignment_files", joinColumns = @JoinColumn(name = "topic_assignment_id"), inverseJoinColumns = @JoinColumn(name = "file_id"))
