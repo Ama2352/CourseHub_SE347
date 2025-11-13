@@ -46,6 +46,7 @@ public class TopicService {
     private final EnrollmentDetailRepo enrollmentDetailRepo;
     private final QuizResponseRepo quizResponseRepo;
     private final AssignmentResponseRepo assignmentResponseRepo;
+    private final QuestionRepo questionRepo;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -301,6 +302,23 @@ public class TopicService {
         topicQuiz.setGradeToPass(quizData.getGradeToPass());
         topicQuiz.setGradingMethod(quizData.getGradingMethod());
         topicQuiz.setAttemptAllowed(quizData.getAttemptAllowed());
+
+        // Update questions if provided
+        if (quizData.getQuestions() != null) {
+            List<UUID> questionIds = quizData.getQuestions().stream()
+                    .map(q -> q.getId())
+                    .filter(id -> id != null)
+                    .toList();
+            if (!questionIds.isEmpty()) {
+                List<Question> questions = questionRepo.findAllById(questionIds);
+                // Replace the questions list
+                topicQuiz.getQuestions().clear();
+                topicQuiz.getQuestions().addAll(questions);
+            } else {
+                // Clear questions if empty list provided
+                topicQuiz.getQuestions().clear();
+            }
+        }
 
         TopicQuiz savedQuiz = topicQuizRepo.save(topicQuiz);
         entityManager.flush(); // Ensure changes are persisted immediately
