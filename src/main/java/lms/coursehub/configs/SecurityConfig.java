@@ -28,13 +28,15 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/auth/**",
-                                "/error")
-                        .permitAll()
-                        .anyRequest().authenticated())
+                    .requestMatchers(
+                        "/v3/api-docs/**",
+                        "/swagger-ui/**",
+                        "/auth/**",
+                        "/error")
+                    .permitAll()
+                    // Notification endpoints require authenticated users
+                    .requestMatchers("/notification/**").authenticated()
+                    .anyRequest().authenticated())
                 .addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .build();
