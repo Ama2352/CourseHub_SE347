@@ -45,6 +45,7 @@ public class CourseService {
                     HttpStatus.BAD_REQUEST);
 
         Course course = courseMapper.toEntity(request);
+        course.setIsPublished(request.getIsPublished());
         course.setCreator(userService.getCurrentUser());
 
         course = courseRepo.save(course);
@@ -72,7 +73,7 @@ public class CourseService {
         if (request.getLevel() != null)
             course.setLevel(request.getLevel());
         if (request.getIsPublished() != null)
-            course.setPublished(request.getIsPublished());
+            course.setIsPublished(request.getIsPublished());
 
         course = courseRepo.save(course);
         return courseMapper.toResponseDto(course);
@@ -129,6 +130,22 @@ public class CourseService {
     @Transactional(readOnly = true)
     public List<CourseResponseDto> getTeacherCourses(UUID userId) {
         List<Course> courses = courseRepo.findByCreatorId(userId);
+        // Force initialization of lazy collections
+        courses.forEach(course -> {
+            course.getEnrollmentDetails().size();
+            course.getSections().forEach(section -> {
+                section.getTopics().size();
+            });
+        });
+        return courses.stream()
+                .map(courseMapper::toResponseDto)
+                .toList();
+    }
+
+    // GET /course?studentId={studentId} - Get courses enrolled by a specific student
+    @Transactional(readOnly = true)
+    public List<CourseResponseDto> getStudentEnrolledCourses(UUID studentId) {
+        List<Course> courses = courseRepo.findByEnrollmentDetailsStudentId(studentId);
         // Force initialization of lazy collections
         courses.forEach(course -> {
             course.getEnrollmentDetails().size();

@@ -13,4 +13,6 @@ public interface CourseRepo extends JpaRepository<Course, String> {
     List<Course> findByIsPublishedTrue();
 
     List<Course> findByCreatorId(UUID creatorId);
+
+    List<Course> findByEnrollmentDetailsStudentId(UUID studentId);
 }
