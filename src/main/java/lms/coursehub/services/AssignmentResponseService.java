@@ -8,6 +8,7 @@ import lms.coursehub.models.dtos.assignment.UpdateAssignmentResponseRequest;
 import lms.coursehub.models.dtos.topic.CloudinaryFileDto;
 import lms.coursehub.models.entities.AssignmentResponse;
 import lms.coursehub.models.entities.CloudinaryFile;
+import lms.coursehub.models.entities.Topic;
 import lms.coursehub.models.entities.TopicAssignment;
 import lms.coursehub.models.entities.User;
 import lms.coursehub.repositories.AssignmentResponseRepo;
@@ -32,6 +33,7 @@ public class AssignmentResponseService {
     private final CloudinaryFileRepo cloudinaryFileRepo;
     private final AssignmentResponseMapper assignmentResponseMapper;
     private final UserService userService;
+    private final NotificationService notificationService;
 
     @Transactional
     public AssignmentResponseDto createAssignmentResponse(UUID topicId, CreateAssignmentResponseRequest request) {
@@ -61,6 +63,7 @@ public class AssignmentResponseService {
         }
 
         assignmentResponse = assignmentResponseRepo.save(assignmentResponse);
+        notifyInstructorAboutSubmission(topicAssignment, currentUser);
 
         return assignmentResponseMapper.toDto(assignmentResponse);
     }
@@ -125,6 +128,29 @@ public class AssignmentResponseService {
         }
 
         assignmentResponseRepo.delete(response);
+    }
+
+    private void notifyInstructorAboutSubmission(TopicAssignment topicAssignment, User student) {
+        if (topicAssignment == null || student == null || notificationService == null) {
+            return;
+        }
+
+        Topic topic = topicAssignment.getTopic();
+        if (topic == null || topic.getSection() == null || topic.getSection().getCourse() == null) {
+            return;
+        }
+
+        User instructor = topic.getSection().getCourse().getCreator();
+        if (instructor == null || instructor.getId().equals(student.getId())) {
+            return;
+        }
+
+        String topicTitle = topic.getTitle() != null ? topic.getTitle() : "Assignment";
+        String courseTitle = topic.getSection().getCourse().getTitle();
+        String title = "New assignment submission";
+        String message = String.format("%s just submitted \"%s\" in %s.",
+                student.getUsername(), topicTitle, courseTitle);
+        notificationService.notifyUser(instructor.getId(), title, message);
     }
 
     private List<CloudinaryFile> processCloudinaryFiles(List<CloudinaryFileDto> fileDtos) {

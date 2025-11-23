@@ -47,6 +47,7 @@ public class TopicService {
     private final QuizResponseRepo quizResponseRepo;
     private final AssignmentResponseRepo assignmentResponseRepo;
     private final QuestionRepo questionRepo;
+    private final NotificationService notificationService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -91,11 +92,44 @@ public class TopicService {
             response.setSectionId(topic.getSection().getId());
             response.setData(dataJson);
 
+            notifyStudentsAboutNewTopic(topic);
             return response;
 
         } catch (Exception e) {
             throw new CustomException("Failed to create topic: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private void notifyStudentsAboutNewTopic(Topic topic) {
+        if (topic == null || notificationService == null) {
+            return;
+        }
+
+        Section section = topic.getSection();
+        if (section == null || section.getCourse() == null) {
+            return;
+        }
+
+        Course course = section.getCourse();
+        List<EnrollmentDetail> enrollments = enrollmentDetailRepo
+                .findByCourseIdAndJoinDateBefore(course.getId(), LocalDateTime.now());
+        if (enrollments == null || enrollments.isEmpty()) {
+            return;
+        }
+
+        User instructor = course.getCreator();
+        String courseTitle = course.getTitle() != null ? course.getTitle() : "your course";
+        String topicTitle = topic.getTitle() != null ? topic.getTitle() : "a new topic";
+        String topicType = topic.getType() != null ? topic.getType().toLowerCase(Locale.ROOT) : "topic";
+        String posterName = instructor != null ? instructor.getUsername() : "Your instructor";
+        String title = "New " + topicType + " in " + courseTitle;
+        String message = String.format("%s just posted \"%s\".", posterName, topicTitle);
+
+        enrollments.stream()
+                .map(EnrollmentDetail::getStudent)
+                .filter(Objects::nonNull)
+                .filter(student -> instructor == null || !student.getId().equals(instructor.getId()))
+                .forEach(student -> notificationService.notifyUser(student.getId(), title, message));
     }
 
     private String createTopicSpecificData(Topic topic, String type, String jsonData) throws Exception {
