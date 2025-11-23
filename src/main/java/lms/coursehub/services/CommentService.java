@@ -30,6 +30,7 @@ public class CommentService {
     private final TopicRepo topicRepo;
     private final UserRepo userRepo;
     private final CommentMapper commentMapper;
+    private final NotificationService notificationService;
 
     /**
      * Get all comments for a specific topic
@@ -79,6 +80,7 @@ public class CommentService {
         comment.setTopic(topic);
 
         Comment savedComment = commentRepo.save(comment);
+        notifyTopicOwnerOfComment(topic, user);
 
         return commentMapper.toDto(savedComment);
     }
@@ -115,5 +117,25 @@ public class CommentService {
         }
 
         commentRepo.delete(comment);
+    }
+
+    private void notifyTopicOwnerOfComment(Topic topic, User commenter) {
+        if (topic == null || commenter == null || notificationService == null) {
+            return;
+        }
+
+        if (topic.getSection() == null || topic.getSection().getCourse() == null) {
+            return;
+        }
+
+        User owner = topic.getSection().getCourse().getCreator();
+        if (owner == null || owner.getId().equals(commenter.getId())) {
+            return;
+        }
+
+        String topicTitle = topic.getTitle() != null ? topic.getTitle() : "your topic";
+        String title = "New comment";
+        String message = String.format("%s commented on \"%s\".", commenter.getUsername(), topicTitle);
+        notificationService.notifyUser(owner.getId(), title, message);
     }
 }
