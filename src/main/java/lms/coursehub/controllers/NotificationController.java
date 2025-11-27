@@ -46,7 +46,7 @@ public class NotificationController {
     @Operation(summary = "Mark notification read/unread")
     @PatchMapping("/{id}/read")
     public ResponseEntity<NotificationDto> setRead(@PathVariable UUID id, @Valid @RequestBody SetReadRequest request) {
-        NotificationDto dto = notificationService.markAsRead(id, request.isRead());
+        NotificationDto dto = notificationService.markAsRead(id, request.getIsRead());
         return ResponseEntity.ok(dto);
     }
 

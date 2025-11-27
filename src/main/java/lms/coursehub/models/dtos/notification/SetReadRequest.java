@@ -10,5 +10,5 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SetReadRequest {
-    private boolean isRead;
+    private Boolean isRead;
 }

@@ -37,5 +37,5 @@ public class Notification {
     private LocalDateTime timestamp;
 
     @Column(nullable = false)
-    private boolean isRead = false;
+    private Boolean isRead = false;
 }

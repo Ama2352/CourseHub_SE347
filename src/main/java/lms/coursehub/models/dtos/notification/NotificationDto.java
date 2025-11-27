@@ -17,5 +17,5 @@ public class NotificationDto {
     private String title;
     private String message;
     private LocalDateTime timestamp;
-    private boolean isRead;
+    private Boolean isRead;
 }
