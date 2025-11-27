@@ -31,7 +31,7 @@ public class Course {
     private BigDecimal price;
     private String category;
     private String level;
-    private boolean isPublished;
+    private Boolean isPublished;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private User creator;

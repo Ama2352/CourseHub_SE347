@@ -19,7 +19,7 @@ public class CourseResponseDto {
     private BigDecimal price;
     private String category;
     private String level;
-    private boolean isPublished;
+    private Boolean isPublished;
     private UserResponseDto creator;
     private List<UserResponseDto> students;
     private List<SectionResponseDto> sections;

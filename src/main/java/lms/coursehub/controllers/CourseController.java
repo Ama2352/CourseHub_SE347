@@ -43,10 +43,14 @@ public class CourseController {
     }
 
     @GetMapping
-    public ResponseEntity<List<CourseResponseDto>> getCourses(@RequestParam(required = false) String userId) {
+    public ResponseEntity<List<CourseResponseDto>> getCourses(
+            @RequestParam(required = false) String userId,
+            @RequestParam(required = false) String studentId) {
         List<CourseResponseDto> responses;
         if (userId != null) {
             responses = courseService.getTeacherCourses(UUID.fromString(userId));
+        } else if (studentId != null) {
+            responses = courseService.getStudentEnrolledCourses(UUID.fromString(studentId));
         } else {
             responses = courseService.getPublicCourses();
         }
