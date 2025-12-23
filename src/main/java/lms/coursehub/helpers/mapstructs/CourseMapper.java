@@ -21,6 +21,7 @@ public interface CourseMapper {
     @Mapping(target = "price", ignore = true)
     @Mapping(target = "sections", ignore = true)
     @Mapping(target = "totalJoined", ignore = true)
+    @Mapping(target = "isPublished", ignore = true)
     Course toEntity(CreateCourseRequest request);
 
     @Mapping(source = "creator", target = "creator")

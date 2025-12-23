@@ -1,8 +1,10 @@
 package lms.coursehub.models.dtos.course;
 
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
+@Setter
 public class CreateCourseRequest {
     private String id;
     private String title;
@@ -10,5 +12,5 @@ public class CreateCourseRequest {
     private String imageUrl;
     private String category;
     private String level;
-    private boolean isPublished;
+    private Boolean isPublished;
 }
