@@ -48,6 +48,7 @@ public class TopicService {
     private final AssignmentResponseRepo assignmentResponseRepo;
     private final QuestionRepo questionRepo;
     private final NotificationService notificationService;
+    private final MeetingHistoryRepo meetingHistoryRepo;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -1521,5 +1522,35 @@ public class TopicService {
         Map<Number, Number> result = new HashMap<>();
         groupedValues.forEach((k, v) -> result.put(k, v));
         return result;
+    }
+
+    /**
+     * Save meeting history with participant information
+     */
+    @Transactional
+    public void saveMeetingHistory(String courseId, UUID topicId, SaveMeetingHistoryRequest request) {
+        Topic topic = topicRepo.findById(topicId)
+                .orElseThrow(() -> new CustomException("Topic not found", HttpStatus.NOT_FOUND));
+        
+        // Verify topic belongs to course
+        if (topic.getSection() == null || !topic.getSection().getCourse().getId().equals(courseId)) {
+            throw new CustomException("Topic does not belong to this course", HttpStatus.BAD_REQUEST);
+        }
+        
+        MeetingHistory history = new MeetingHistory();
+        history.setTopic(topic);
+        history.setStartTime(request.getStartTime());
+        history.setEndTime(request.getEndTime());
+        history.setDuration(request.getDuration());
+        
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.registerModule(new JavaTimeModule());
+            history.setParticipants(mapper.writeValueAsString(request.getParticipants()));
+        } catch (Exception e) {
+            throw new CustomException("Failed to serialize participants", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        
+        meetingHistoryRepo.save(history);
     }
 }
