@@ -9,16 +9,20 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lms.coursehub.models.dtos.user.StudentReportDto;
 import lms.coursehub.models.dtos.user.UpdatePasswordRequest;
 import lms.coursehub.models.dtos.user.UpdateProfileRequest;
 import lms.coursehub.models.dtos.user.UserResponseDto;
 import lms.coursehub.models.dtos.user.UserWorkResponseDto;
 import lms.coursehub.services.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -72,6 +76,31 @@ public class UserController {
     public ResponseEntity<List<UserResponseDto>> getAllUsers() {
         List<UserResponseDto> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
+    }
+
+    @Operation(
+            summary = "Get user by ID",
+            description = "Retrieves a specific user's profile by their ID"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Successfully retrieved user profile",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = UserResponseDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "User not found",
+                    content = @Content
+            )
+    })
+    @GetMapping("/{userId}")
+    public ResponseEntity<UserResponseDto> getUserById(@PathVariable UUID userId) {
+        UserResponseDto user = userService.getUserById(userId);
+        return ResponseEntity.ok(user);
     }
 
     @Operation(
@@ -162,6 +191,42 @@ public class UserController {
             @RequestParam String courseId) {
         userService.leaveCourse(courseId);
         return ResponseEntity.ok().build();
+    }
+
+    @Operation(
+            summary = "Get student performance report",
+            description = "Retrieves a comprehensive performance report for the current user in a specific course"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Successfully retrieved student report",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = StudentReportDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Course not found",
+                    content = @Content
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized - Authentication required",
+                    content = @Content
+            )
+    })
+    @GetMapping("/me/report")
+    public ResponseEntity<StudentReportDto> getStudentReport(
+            @Parameter(description = "ID of the course", required = true)
+            @RequestParam String courseId,
+            @Parameter(description = "Start date in ISO format (yyyy-MM-ddTHH:mm:ss)")
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
+            @Parameter(description = "End date in ISO format (yyyy-MM-ddTHH:mm:ss)")
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
+        StudentReportDto report = userService.getStudentReport(courseId, start, end);
+        return ResponseEntity.ok(report);
     }
 
     @Operation(
