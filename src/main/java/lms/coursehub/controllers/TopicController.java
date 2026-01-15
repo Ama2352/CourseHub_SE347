@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import lms.coursehub.models.dtos.reports.SingleAssignmentReportDto;
 import lms.coursehub.models.dtos.reports.SingleQuizReportDto;
 import lms.coursehub.models.dtos.topic.CreateTopicRequest;
+import lms.coursehub.models.dtos.topic.SaveMeetingHistoryRequest;
 import lms.coursehub.models.dtos.topic.TopicResponseDto;
 import lms.coursehub.models.dtos.topic.UpdateTopicRequest;
 import lms.coursehub.services.TopicService;
@@ -15,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -78,6 +80,16 @@ public class TopicController {
 
         SingleAssignmentReportDto report = topicService.getSingleAssignmentReport(courseId, topicId);
         return ResponseEntity.ok(report);
+    }
+
+    @PostMapping("/{topicId}/meeting-history")
+    public ResponseEntity<Map<String, String>> saveMeetingHistory(
+            @PathVariable String courseId,
+            @PathVariable UUID topicId,
+            @Valid @RequestBody SaveMeetingHistoryRequest request) {
+        
+        topicService.saveMeetingHistory(courseId, topicId, request);
+        return ResponseEntity.ok(Map.of("message", "History saved successfully"));
     }
 }
 
