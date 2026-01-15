@@ -7,14 +7,19 @@ import lms.coursehub.models.dtos.auth.RegisterRequest;
 import lms.coursehub.models.dtos.user.UpdatePasswordRequest;
 import lms.coursehub.models.dtos.user.UpdateProfileRequest;
 import lms.coursehub.models.dtos.user.UserResponseDto;
+import lms.coursehub.models.dtos.user.StudentReportDto;
 import lms.coursehub.models.dtos.user.UserWorkResponseDto;
 import lms.coursehub.models.entities.*;
+import lms.coursehub.models.enums.TopicType;
 import lms.coursehub.models.enums.UserRole;
 import lms.coursehub.repositories.CourseRepo;
 import lms.coursehub.repositories.EnrollmentDetailRepo;
 import lms.coursehub.repositories.RefreshTokenRepo;
 import lms.coursehub.repositories.TopicRepo;
 import lms.coursehub.repositories.UserRepo;
+import lms.coursehub.repositories.QuizResponseRepo;
+import lms.coursehub.repositories.AssignmentResponseRepo;
+import lms.coursehub.repositories.TopicAssignmentRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -43,6 +48,9 @@ public class UserService {
     private final TopicRepo topicRepo;
     private final CourseRepo courseRepo;
     private final CustomUserDetailsService customUserDetailsService;
+    private final QuizResponseRepo quizResponseRepo;
+    private final AssignmentResponseRepo assignmentResponseRepo;
+    private final TopicAssignmentRepo topicAssignmentRepo;
 
     public User findByEmail(String email) {
         return userRepo.findByEmail(email)
@@ -361,5 +369,101 @@ public class UserService {
         }
 
         return dto;
+    }
+
+    /**
+     * Get user by ID
+     */
+    @Transactional(readOnly = true)
+    public UserResponseDto getUserById(UUID userId) {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
+        return userMapper.toDto(user);
+    }
+
+    /**
+     * Get student performance report for a specific course
+     */
+    @Transactional(readOnly = true)
+    public StudentReportDto getStudentReport(String courseId, LocalDateTime start, LocalDateTime end) {
+        User currentUser = getCurrentUser();
+        
+        Course course = courseRepo.findById(courseId)
+                .orElseThrow(() -> new CustomException("Course not found", HttpStatus.NOT_FOUND));
+        
+        // Get all topics for the course
+        List<Topic> allTopics = topicRepo.findBySectionCourseId(courseId);
+        
+        // Filter by date if provided
+        if (start != null) {
+            allTopics = allTopics.stream()
+                    .filter(t -> t.getCreatedAt() != null && t.getCreatedAt().isAfter(start))
+                    .collect(Collectors.toList());
+        }
+        if (end != null) {
+            allTopics = allTopics.stream()
+                    .filter(t -> t.getCreatedAt() != null && t.getCreatedAt().isBefore(end))
+                    .collect(Collectors.toList());
+        }
+        
+        // Separate quizzes and assignments
+        List<Topic> quizTopics = allTopics.stream()
+                .filter(t -> "quiz".equalsIgnoreCase(t.getTopicType()))
+                .collect(Collectors.toList());
+                
+        List<Topic> assignmentTopics = allTopics.stream()
+                .filter(t -> "assignment".equalsIgnoreCase(t.getTopicType()))
+                .collect(Collectors.toList());
+        
+        // Get user's responses
+        List<QuizResponse> userQuizResponses = quizResponseRepo.findByStudentId(currentUser.getId());
+        List<AssignmentResponse> userAssignmentResponses = assignmentResponseRepo.findByStudentId(currentUser.getId());
+        
+        // Filter responses for this course's topics
+        Set<UUID> quizTopicIds = quizTopics.stream().map(Topic::getId).collect(Collectors.toSet());
+        Set<UUID> assignmentTopicIds = assignmentTopics.stream().map(Topic::getId).collect(Collectors.toSet());
+        
+        List<QuizResponse> courseQuizResponses = userQuizResponses.stream()
+                .filter(r -> quizTopicIds.contains(r.getTopic().getId()))
+                .collect(Collectors.toList());
+                
+        List<AssignmentResponse> courseAssignmentResponses = userAssignmentResponses.stream()
+                .filter(r -> assignmentTopicIds.contains(r.getTopic().getId()))
+                .collect(Collectors.toList());
+        
+        // Calculate statistics
+        double avgQuizScore = courseQuizResponses.stream()
+                .mapToDouble(QuizResponse::getTotalGrade)
+                .average()
+                .orElse(0.0);
+        
+        long lateSubmissions = courseAssignmentResponses.stream()
+                .filter(r -> {
+                    TopicAssignment assignment = topicAssignmentRepo.findByTopicId(r.getTopic().getId())
+                            .orElse(null);
+                    return assignment != null && 
+                           assignment.getDueDate() != null && 
+                           r.getUpdatedAt() != null &&
+                           r.getUpdatedAt().isAfter(assignment.getDueDate());
+                })
+                .count();
+        
+        int totalWork = quizTopics.size() + assignmentTopics.size();
+        int completedWork = courseQuizResponses.size() + courseAssignmentResponses.size();
+        double completionRate = totalWork > 0 ? (double) completedWork / totalWork * 100 : 0.0;
+        
+        StudentReportDto report = new StudentReportDto();
+        report.setCourseId(courseId);
+        report.setCourseName(course.getTitle());
+        report.setTotalQuizCount(quizTopics.size());
+        report.setCompletedQuizCount(courseQuizResponses.size());
+        report.setAverageQuizScore(avgQuizScore);
+        report.setTotalAssignmentCount(assignmentTopics.size());
+        report.setSubmittedAssignmentCount(courseAssignmentResponses.size());
+        report.setLateSubmissions((int) lateSubmissions);
+        report.setCompletionRate(completionRate);
+        report.setReportGeneratedAt(LocalDateTime.now());
+        
+        return report;
     }
 }
