@@ -2,6 +2,8 @@ package lms.coursehub.services;
 
 import lms.coursehub.helpers.exceptions.CustomException;
 import lms.coursehub.helpers.mapstructs.CourseMapper;
+import lms.coursehub.models.dtos.course.CloneCourseRequest;
+import lms.coursehub.models.dtos.course.CloneCourseResponse;
 import lms.coursehub.models.dtos.course.CreateCourseRequest;
 import lms.coursehub.models.dtos.course.CourseResponseDto;
 import lms.coursehub.models.dtos.course.UpdateCourseRequest;
@@ -27,6 +29,7 @@ public class CourseService {
     private final UserService userService;
     private final CourseMapper courseMapper;
     private final EnrollmentDetailRepo enrollmentDetailRepo;
+    private final CourseCloneService courseCloneService;
 
     public Course findCourseById(String id) {
         return courseRepo.findById(id).orElseThrow(() -> new CustomException("Course not found", HttpStatus.NOT_FOUND));
@@ -139,6 +142,14 @@ public class CourseService {
         return courses.stream()
                 .map(courseMapper::toResponseDto)
                 .toList();
+    }
+
+    /**
+     * Clone a course with all its content
+     */
+    @Transactional
+    public CloneCourseResponse cloneCourse(String sourceCourseId, CloneCourseRequest request) {
+        return courseCloneService.cloneCourse(sourceCourseId, request);
     }
 
 }
